@@ -45,7 +45,7 @@ resource fileShare 'Microsoft.Storage/storageAccounts/fileServices/shares@2023-0
 }
 
 /*  ------------------------------------------ Contianer Group ------------------------------------------ */
-resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01' = {
+ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01' = {
   name: containerGroupName
   location: location
   identity: {
@@ -85,11 +85,6 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
             }
           ]
       
-        /*   command: [
-            '/bin/sh'
-            '-c'
-            'cd /mnt/azscripts/azscriptinput && pwsh ./hello.ps1 && pwsh -c "Start-Sleep -Seconds 1800"'
-          ] */
           
            command: [
             '/bin/sh'
@@ -113,8 +108,16 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
         }
       }
     ]
+    
+    dnsConfig: {
+      nameServers: [
+       '10.0.3.70'
+      ]
   }
-}
+
+
+  }
+} 
 
 /*  ------------------------------------------ Virtual Network ------------------------------------------ */
 resource virtualNetwork 'Microsoft.Network/virtualNetworks@2023-11-01' = {
@@ -126,9 +129,15 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2023-11-01' = {
         '10.0.0.0/16'
       ]
     }
+
+    dhcpOptions: {
+      dnsServers: [
+       '10.0.3.70'
+      ]
+    }
   }
 
-  resource privateEndpointSubnet 'subnets' = {
+ resource privateEndpointSubnet 'subnets' = {
     name: 'PrivateEndpointSubnet'
     properties: {
       addressPrefixes: [
@@ -146,6 +155,21 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2023-11-01' = {
           name: 'containerDelegation'
           properties: {
             serviceName: 'Microsoft.ContainerInstance/containerGroups'
+          }
+        }
+      ]
+    }
+  }
+
+  resource privateResolverInboundSubnet 'subnets' = {
+    name: 'privateResolverInboundSubnet'
+    properties: {
+      addressPrefix: '10.0.3.0/24'
+      delegations: [
+        {
+          name: 'privateResolverDelegation'
+          properties: {
+            serviceName: 'Microsoft.Network/dnsResolvers'
           }
         }
       ]
@@ -174,6 +198,9 @@ resource privateEndpointStorageFile 'Microsoft.Network/privateEndpoints@2023-11-
      id: virtualNetwork::privateEndpointSubnet.id
    }
   }
+  dependsOn: [
+     virtualNetwork
+  ]
 }
 
 /*  ------------------------------------------- private dns zone group  ------------------------------------------ */
@@ -235,3 +262,34 @@ resource roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   }
 }
 
+/*  ------------------------------------------ Private Resolver ------------------------------------------ */
+
+resource privateResolver 'Microsoft.Network/dnsResolvers@2022-07-01' = {
+  name: 'privateResolver'
+  location: location
+  properties: {
+    virtualNetwork: {
+      id: virtualNetwork.id
+    }
+  }
+  dependsOn: [
+    virtualNetwork
+  ]
+}
+
+resource inboundEndpoint 'Microsoft.Network/dnsResolvers/inboundEndpoints@2022-07-01' = {
+  name: 'inboundEndpoint'
+  location: location
+  parent: privateResolver
+  properties: {
+    ipConfigurations: [
+      {
+        privateIpAddress: '10.0.3.70'
+        privateIpAllocationMethod: 'Static'
+        subnet: {
+          id: virtualNetwork::privateResolverInboundSubnet.id
+        }
+      }
+    ]
+  }
+}
