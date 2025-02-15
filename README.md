@@ -322,7 +322,12 @@ New-AzResourceGroupDeployment -ResourceGroupName $resourceGroupName -TemplateFil
 
 You should upload the PowerShell file you want to run to the storage account file share, as shown below.
 
-![fileshare](https://github.com/user-attachments/assets/44cad097-ab37-4450-a46c-4cbea1270a65)
+![monitoring](https://github.com/user-attachments/assets/a119c792-8bc1-47ef-b371-ebc4efafd94f)
+
+![nslookup 1](https://github.com/user-attachments/assets/c818aa73-473a-449e-90b7-aa1d241f99ab)
+
+
+![nslookup 2](https://github.com/user-attachments/assets/6d61a39c-5c81-4594-9df3-ef7ecab545dd)
 
 
 
