@@ -326,9 +326,7 @@ You should upload the PowerShell file you want to run to the storage account fil
 
 ![nslookup 1](https://github.com/user-attachments/assets/c818aa73-473a-449e-90b7-aa1d241f99ab)
 
-
 ![nslookup 2](https://github.com/user-attachments/assets/6d61a39c-5c81-4594-9df3-ef7ecab545dd)
-
 
 
 ```powershell
@@ -337,15 +335,27 @@ $resourceGroupName = 'RG-DEPLOYMENT-SCRIPT-PRIVATE-CUSTOM-DNS'
 
 az container exec --resource-group $resourceGroupName --name $containerName --exec-command "/bin/sh"
 
+```
+
+Install sudo and DNS Utilities
+
+```bash
+
 su -
 apt-get update
 apt-get install -y sudo
 sudo apt-get update
 sudo apt-get install -y dnsutils
 
+
+Test DNS Resolution
+
+```bash
 nslookup datasynchrostore.file.core.windows.net
 
+```
 
+```bash
 root@SandboxHost-638752067807257456:~# nslookup datasynchrostore.file.core.windows.net
 Server:         10.0.3.70
 Address:        10.0.3.70#53
@@ -358,6 +368,14 @@ Address: 10.0.1.4
 root@SandboxHost-638752067807257456:~#
 
 ```
+
+Server: 10.0.3.70: The DNS server used for the lookup.
+Address: 10.0.3.70#53: The IP address and port of the DNS server.
+Non-authoritative answer: Indicates the result is from a DNS cache (not authoritative).
+Canonical Name: Resolves datasynchrostore.file.core.windows.net to datasynchrostore.privatelink.file.core.windows.net.
+IP Address: The resolved IP address is 10.0.1.4.
+
+
 
 ### Brief Explanation
 
