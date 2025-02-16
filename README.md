@@ -366,6 +366,6 @@ root@SandboxHost-638752067807257456:~#
 - IP Address: The resolved IP address is 10.0.1.4.
 
 
-## 8. Github Repository
+## 5. Github Repository
 
-<https://github.com/azurecorner/deployment-script-privately-over-a-private-endpoint-custum-dns>
+https://github.com/azurecorner/deployment-script-privately-over-a-private-endpoint-custum-dns-02
