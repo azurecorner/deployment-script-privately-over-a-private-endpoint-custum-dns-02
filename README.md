@@ -1,4 +1,4 @@
-# Run Deployment Script Privately in Azure Over Private Endpoint and Custom DNS Server Using Bicep part 03
+# Run Deployment Script Privately in Azure Over Private Endpoint and Custom DNS Server Using Bicep Part2
 
 ## 1. Overview
 
@@ -15,7 +15,7 @@ For more details on running a Bicep deployment script privately over a private e
 
 In the article linked above, the Azure Container Instance resource is created automatically by the deployment script. But what happens if you use a custom DNS server? The limitation is that you cannot use a custom DNS server because the ACI is created automatically, and the only configurable option is the container group name.
 
-In this tutorial, I will demonstrate how to use a custom DNS server to run a script in Azure.
+In this tutorial, I will demonstrate how to use a custom DNS server to run a script in Azure Part2.
 
 ---
 To run deployment scripts privately, you need the following infrastructure:
@@ -111,8 +111,7 @@ dhcpOptions: {
     }
 ```
 
-This **Azure Bicep** snippet defines a **subnet** resource inside a Virtual Network (**VNet**) and delegates it to **Azure DNS Private Resolver** allowing the subnet to be used for Azure Private DNS Resolution.
-
+Here I define a **subnet** resource inside a Virtual Network (**VNet**) and delegates it to **Azure DNS Private Resolver** allowing the subnet to be used for Azure Private DNS Resolution.
 
 ```Bicep
  resource privateResolverInboundSubnet 'subnets' = {
@@ -132,11 +131,10 @@ This **Azure Bicep** snippet defines a **subnet** resource inside a Virtual Netw
 
 ```
 
-### 2.2 Private Resolver 
+### 2.2 Private Resolver
 
 This Bicep code defines an **Azure Private DNS Resolver** with an **Inbound Endpoint** inside a **Virtual Network (VNet)**.  
 The **Private DNS Resolver** allows private DNS resolution within an **Azure environment** or from **on-premises networks**.
-
 
 ```Bicep
 /*  ------------------------------------------ Private Resolver ------------------------------------------ */
@@ -168,37 +166,31 @@ resource inboundEndpoint 'Microsoft.Network/dnsResolvers/inboundEndpoints@2022-0
 }
 
 ```
-# **Private DNS Resolver Explanation**
 
-## **Resource Definition**
+#### **Private DNS Resolver Resource Definition**
+
 - **Defines a Private DNS Resolver** named `privateResolver`.
 - Uses the **resource type** `'Microsoft.Network/dnsResolvers'`.
 - **`location`**: Specifies the **region** where the resolver is deployed.
 - **`virtualNetwork.id`**: Associates the resolver with an **existing Virtual Network (VNet)**.
 
-## **Purpose**
-- The **Private DNS Resolver** is used to **resolve DNS queries** for **private resources** within **Azure**.
-- It operates inside a **Virtual Network (VNet)**, enabling **private name resolution**.
+The **Private DNS Resolver** is used to **resolve DNS queries** for **private resources** within **Azure**.
+It operates inside a **Virtual Network (VNet)**, enabling **private name resolution**.
 
+#### **Inbound Endpoint Resource Definition**
 
-
-# **Inbound Endpoint Explanation**
-
-## **Resource Definition**
 - **Defines an Inbound Endpoint** named `inboundEndpoint`.
 - Uses the **resource type** `'Microsoft.Network/dnsResolvers/inboundEndpoints'`.
 - **`parent: privateResolver`**: This endpoint is **attached** to the `privateResolver` resource.
 
-## **IP Configurations**
+#### **IP Configurations**
+
 - **`privateIpAddress: '10.0.3.70'`** → Assigns a **static private IP** for DNS resolution.
 - **`privateIpAllocationMethod: 'Static'`** → Ensures the IP remains **fixed**.
 - **`subnet.id`** → Places the endpoint in a **dedicated subnet** (`privateResolverInboundSubnet`).
 
-## **Purpose**
-- The **Inbound Endpoint** allows **on-premises** or **cross-VNet resources** to send **DNS queries** for **private resolution**.
-- The **IP address** (`10.0.3.70`) is used by **clients** to resolve **private domains**.
-
-
+The **Inbound Endpoint** allows **on-premises** or **cross-VNet resources** to send **DNS queries** for **private resolution**.
+The **IP address** (`10.0.3.70`) is used by **clients** to resolve **private domains**.
 
 ### 2.3  Container Group
 
@@ -278,17 +270,17 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
 }
 
 ```
-In this Bicep snippet, the `dnsConfig` is part of the configuration for an **Azure Container Group**. It specifies custom DNS server settings for the containers within the group.
 
-# **dnsConfig in Container Group Explanation**
+The `dnsConfig` block of the configuration for the  **Azure Container Group** specifies custom DNS server settings for the containers within the group.
 
-## **dnsConfig**
+#### **dnsConfig**
+
 - Defines **DNS settings** for the **container group**.
 
-## **nameServers**
-- Specifies the list of **DNS servers** the containers will use for **name resolution**.
-- **`'10.0.3.70'`** is a **static DNS server IP** address that will be used by the containers for **DNS queries**.
+#### **nameServers**
 
+- Specifies the list of **DNS servers** the containers will use for **name resolution**.
+- **`'10.0.3.70'`** is a **static IP of Private Resolver Inbound IP** address that will be used by the containers for **DNS queries**.
 
 ```Bicep
     dnsConfig: {
@@ -298,7 +290,7 @@ In this Bicep snippet, the `dnsConfig` is part of the configuration for an **Azu
   }
 ```
 
-### Deployment Commands  
+## 3  Deployment Commands  
 
 ```powershell
 $templateFile = 'main.bicep' 
@@ -318,7 +310,7 @@ New-AzResourceGroup -Name $resourceGroupName -Location "westeurope"
 New-AzResourceGroupDeployment -ResourceGroupName $resourceGroupName -TemplateFile $templateFile -DeploymentDebugLogLevel All  
 ```
 
-## 7. Monitoring
+## 4. Monitoring
 
 You should upload the PowerShell file you want to run to the storage account file share, as shown below.
 
@@ -327,7 +319,6 @@ You should upload the PowerShell file you want to run to the storage account fil
 ![nslookup 1](https://github.com/user-attachments/assets/c818aa73-473a-449e-90b7-aa1d241f99ab)
 
 ![nslookup 2](https://github.com/user-attachments/assets/6d61a39c-5c81-4594-9df3-ef7ecab545dd)
-
 
 ```powershell
 $containerName='datasynchrocg'
@@ -369,24 +360,11 @@ root@SandboxHost-638752067807257456:~#
 
 ```
 
-Server: 10.0.3.70: The DNS server used for the lookup.
-Address: 10.0.3.70#53: The IP address and port of the DNS server.
-Non-authoritative answer: Indicates the result is from a DNS cache (not authoritative).
-Canonical Name: Resolves datasynchrostore.file.core.windows.net to datasynchrostore.privatelink.file.core.windows.net.
-IP Address: The resolved IP address is 10.0.1.4.
+- Server: 10.0.3.70: The DNS server used for the lookup (Inbound Ip of Private Resolver).
+- Address: 10.0.3.70#53: The IP address and port of the DNS server.
+- Canonical Name: Resolves datasynchrostore.file.core.windows.net to datasynchrostore.privatelink.file.core.windows.net.
+- IP Address: The resolved IP address is 10.0.1.4.
 
-
-
-### Brief Explanation
-
-
-
-3. **Interactive Shell and Script Execution:**
-   - **Execute Shell Command:** Uses `az container exec` to open a shell (`/bin/sh`) inside the container.
-   - **Navigate and List Files:** Once inside the container, changes directory to `/mnt/azscripts/azscriptinput` and lists the directory contents.
-
-
-- **Run Script:** Executes the PowerShell script `hello.ps1` using `pwsh` if it is present in that directory.
 
 ## 8. Github Repository
 
